@@ -10,7 +10,8 @@ from EventKit import (
     EKRecurrenceRule,  # type: ignore[import-untyped]
 )
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
-
+from Foundation import NSTimeZone, NSDate
+from zoneinfo import ZoneInfo
 
 class Frequency(IntEnum):
     DAILY = 0  # EKRecurrenceFrequencyDaily
@@ -98,6 +99,7 @@ class Event:
     title: str
     start_time: FlexibleDateTime
     end_time: FlexibleDateTime
+    timezone: str
     identifier: str
     calendar_name: str | None = None
     location: str | None = None
@@ -152,6 +154,7 @@ class Event:
             title=ekevent.title(),
             start_time=ekevent.startDate(),
             end_time=ekevent.endDate(),
+            timezone=ekevent.timeZone(),
             calendar_name=ekevent.calendar().title(),
             location=ekevent.location(),
             notes=ekevent.notes(),
@@ -187,6 +190,7 @@ class Event:
             f" - Identifier: {self.identifier},\n"
             f" - Start Time: {self.start_time},\n"
             f" - End Time: {self.end_time},\n"
+            f" - Timezone: {self.timezone or 'N/A'},\n"
             f" - Calendar: {self.calendar_name or 'N/A'},\n"
             f" - Location: {self.location or 'N/A'},\n"
             f" - Notes: {self.notes or 'N/A'},\n"
@@ -204,6 +208,7 @@ class CreateEventRequest(BaseModel):
     title: str
     start_time: datetime
     end_time: datetime
+    timezone: str
     calendar_name: str | None = None
     location: str | None = None
     notes: str | None = None
@@ -217,6 +222,7 @@ class UpdateEventRequest(BaseModel):
     title: str | None = None
     start_time: datetime | None = None
     end_time: datetime | None = None
+    timezone: str | None = None
     calendar_name: str | None = None
     location: str | None = None
     notes: str | None = None

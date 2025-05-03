@@ -1,5 +1,6 @@
 import time
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -79,6 +80,7 @@ def test_event_base():
         "title": "Test Event",
         "start_time": start_time,
         "end_time": end_time,
+        "timezone": "Asia/Shanghai",
         "notes": "Test notes",
         "location": "Test location",
     }
@@ -92,6 +94,7 @@ def test_create_and_get_event(calendar_manager, test_event_base, test_calendar, 
             title=test_event_base["title"],
             start_time=test_event_base["start_time"],
             end_time=test_event_base["end_time"],
+            timezone=test_event_base["timezone"],
             notes=test_event_base["notes"],
             location=test_event_base["location"],
             calendar_name=test_calendar["name"],
@@ -118,6 +121,7 @@ def test_list_events(calendar_manager, test_event_base, test_calendar, cleanup_e
             title="Test Event 1",
             start_time=test_event_base["start_time"],
             end_time=test_event_base["end_time"],
+            timezone=test_event_base["timezone"],
             notes=test_event_base["notes"],
             location=test_event_base["location"],
             calendar_name=test_calendar["name"],
@@ -131,6 +135,7 @@ def test_list_events(calendar_manager, test_event_base, test_calendar, cleanup_e
             title="Test Event 2",
             start_time=test_event_base["start_time"] + timedelta(hours=2),
             end_time=test_event_base["end_time"] + timedelta(hours=2),
+            timezone=test_event_base["timezone"],
             notes=test_event_base["notes"],
             location=test_event_base["location"],
             calendar_name=test_calendar["name"],
@@ -158,6 +163,7 @@ def test_update_event(calendar_manager, test_event_base, test_calendar, cleanup_
             title=test_event_base["title"],
             start_time=test_event_base["start_time"],
             end_time=test_event_base["end_time"],
+            timezone=test_event_base["timezone"],
             notes=test_event_base["notes"],
             location=test_event_base["location"],
             calendar_name=test_calendar["name"],
@@ -190,6 +196,7 @@ def test_delete_event(calendar_manager, test_event_base, test_calendar):
             title=test_event_base["title"],
             start_time=test_event_base["start_time"],
             end_time=test_event_base["end_time"],
+            timezone=test_event_base["timezone"],
             notes=test_event_base["notes"],
             location=test_event_base["location"],
             calendar_name=test_calendar["name"],
@@ -214,6 +221,7 @@ def test_recurring_event(calendar_manager, test_event_base, test_calendar, clean
             title=test_event_base["title"],
             start_time=test_event_base["start_time"],
             end_time=test_event_base["end_time"],
+            timezone=test_event_base["timezone"],
             notes=test_event_base["notes"],
             location=test_event_base["location"],
             recurrence_rule=recurrence_rule,
@@ -249,6 +257,7 @@ def test_all_day_event_with_reminders(calendar_manager, test_event_base, test_ca
             title=test_event_base["title"],
             start_time=test_event_base["start_time"],
             end_time=test_event_base["end_time"],
+            timezone=test_event_base["timezone"],
             notes=test_event_base["notes"],
             location=test_event_base["location"],
             all_day=True,
@@ -260,7 +269,6 @@ def test_all_day_event_with_reminders(calendar_manager, test_event_base, test_ca
 
     retrieved_event = calendar_manager.find_event_by_id(event.identifier)
     assert retrieved_event.all_day is True
-
     # Verify our explicitly requested alarms are present
     # EventKit may add its own default alarm hence asserting presence not equality
     actual_alarms = retrieved_event.alarms_minutes_offsets
@@ -272,23 +280,27 @@ def test_event_across_calendars(calendar_manager, test_event_base, test_calendar
     """Test moving an event between calendars"""
     # Get available calendars
     calendars = calendar_manager.list_calendars()
-    if len(calendars) < 2:
+    # 找到除 test_calendar 以外的另一个日历
+    other_calendars = [c for c in calendars if c.title() != test_calendar["name"]]
+    if not other_calendars:
         pytest.skip("Need at least 2 calendars for this test")
+    other_calendar_name = other_calendars[0].title()
 
-    # Create event in the Home calendar
+    # Create event in the other calendar
     event = calendar_manager.create_event(
         CreateEventRequest(
             title=test_event_base["title"],
             start_time=test_event_base["start_time"],
             end_time=test_event_base["end_time"],
+            timezone=test_event_base["timezone"],
             notes=test_event_base["notes"],
             location=test_event_base["location"],
-            calendar_name="Home",
+            calendar_name=other_calendar_name,
         )
     )
     cleanup_events(event.identifier)
 
-    # Move it to another test calendar
+    # Move it to test_calendar
     calendar_manager.update_event(event.identifier, UpdateEventRequest(calendar_name=test_calendar["name"]))
 
     # Verify event moved
@@ -303,6 +315,7 @@ def test_create_event_uses_default_calendar(calendar_manager, test_event_base, t
             title=test_event_base["title"],
             start_time=test_event_base["start_time"],
             end_time=test_event_base["end_time"],
+            timezone=test_event_base["timezone"],
             notes=test_event_base["notes"],
             location=test_event_base["location"],
             calendar_name=test_calendar["name"],
@@ -325,6 +338,7 @@ def test_create_event_nonexistent_calendar(calendar_manager, test_event_base):
                 title=test_event_base["title"],
                 start_time=test_event_base["start_time"],
                 end_time=test_event_base["end_time"],
+                timezone=test_event_base["timezone"],
                 notes=test_event_base["notes"],
                 location=test_event_base["location"],
                 calendar_name="NonExistentCalendar",
@@ -340,6 +354,7 @@ def test_update_event_nonexistent_calendar(calendar_manager, test_event_base, te
             title=test_event_base["title"],
             start_time=test_event_base["start_time"],
             end_time=test_event_base["end_time"],
+            timezone=test_event_base["timezone"],
             calendar_name=test_calendar["name"],
         )
     )
@@ -367,6 +382,7 @@ def test_all_day_event_with_same_day_reminders(calendar_manager, test_event_base
             title=test_event_base["title"],
             start_time=test_event_base["start_time"],
             end_time=test_event_base["end_time"],
+            timezone=test_event_base["timezone"],
             all_day=True,
             alarms_minutes_offsets=requested_offsets,
             calendar_name=test_calendar["name"],
@@ -392,6 +408,7 @@ def test_all_day_event_mixed_reminders(calendar_manager, test_event_base, test_c
             title=test_event_base["title"],
             start_time=test_event_base["start_time"],
             end_time=test_event_base["end_time"],
+            timezone=test_event_base["timezone"],
             all_day=True,
             alarms_minutes_offsets=requested_offsets,
             calendar_name=test_calendar["name"],

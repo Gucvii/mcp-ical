@@ -71,15 +71,17 @@ async def list_calendars() -> str:
 
 
 @mcp.tool()
-async def list_events(start_date: datetime, end_date: datetime, calendar_name: str | None = None) -> str:
+async def list_events(start_date: datetime, timezone: str, end_date: datetime, calendar_name: str | None = None) -> str:
     """List calendar events in a date range.
 
     The start_date should always use the time such that it represents the beginning of that day (00:00:00).
+    The timezone should be a valid timezone string like "America/New_York" or "Asia/Shanghai".
     The end_date should always use the time such that it represents the end of that day (23:59:59).
     This way, range based searches are always inclusive and can locate all events in that date range.
 
     Args:
         start_date: Start date in ISO8601 format (YYYY-MM-DDT00:00:00).
+        timezone: Timezone string like "America/New_York" or "Asia/Shanghai".
         end_date: Optional end date in ISO8601 format (YYYY-MM-DDT23:59:59).
         calendar_name: Optional calendar name to filter by
     """
@@ -109,6 +111,7 @@ async def create_event(create_event_request: CreateEventRequest) -> str:
     Args:
         title: Event title
         start_time: Start time in ISO format (YYYY-MM-DDTHH:MM:SS)
+        timezone: Timezone string like "America/New_York" or "Asia/Shanghai"
         end_time: End time in ISO format (YYYY-MM-DDTHH:MM:SS)
         notes: Optional event notes/description. Ask user if they want to add notes.
         location: Optional event location. Ask user if they want to specify a location.
@@ -162,6 +165,7 @@ async def update_event(event_id: str, update_event_request: UpdateEventRequest) 
         event_id: Unique identifier of the event to update
         title: Optional new title
         start_time: Optional new start time in ISO format
+        timezone: Optional new timezone.
         end_time: Optional new end time in ISO format
         notes: Optional new notes/description. Ask user if they want to update notes.
         location: Optional new location. Ask user if they want to specify/update location.

@@ -12,6 +12,7 @@ from EventKit import (
     EKSpanFutureEvents,  # type: ignore
     EKSpanThisEvent,  # type: ignore
 )
+from Foundation import NSTimeZone
 from loguru import logger
 
 from .models import (
@@ -90,6 +91,7 @@ class CalendarManager:
         ekevent.setTitle_(new_event.title)
         ekevent.setStartDate_(new_event.start_time)
         ekevent.setEndDate_(new_event.end_time)
+        ekevent.setTimeZone_(NSTimeZone.timeZoneWithName_(new_event.timezone))
 
         if new_event.notes:
             ekevent.setNotes_(new_event.notes)
@@ -158,8 +160,10 @@ class CalendarManager:
             existing_ek_event.setTitle_(request.title)
         if request.start_time is not None:
             existing_ek_event.setStartDate_(request.start_time)
+            existing_ek_event.setTimeZone_(NSTimeZone.timeZoneWithName_(request.timezone))
         if request.end_time is not None:
             existing_ek_event.setEndDate_(request.end_time)
+            existing_ek_event.setTimeZone_(NSTimeZone.timeZoneWithName_(request.timezone))
         if request.location is not None:
             existing_ek_event.setLocation_(request.location)
         if request.notes is not None:
